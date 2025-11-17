@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 pylint = "*"
 black = "*"
+pytesseract = "0.3.13"
 
 [dev-packages]
 
