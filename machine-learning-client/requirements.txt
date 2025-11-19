@@ -5,6 +5,3 @@ pytest
 coverage
 black
 pylint
-time
-os
-numpy

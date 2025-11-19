@@ -6,6 +6,3 @@ coverage
 black
 pylint
 flask-cors
-os
-opencv-python
-numpy
