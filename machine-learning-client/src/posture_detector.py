@@ -63,6 +63,17 @@ class PostureDetector:
         # Extract pose landmarks
         landmarks = results.pose_landmarks.landmark
          
+        # Key points used for simple posture detection
+        shoulder_left = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER]
+        shoulder_right = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER]
+        nose = landmarks[mp_pose.PoseLandmark.NOSE]
+
+        # Convert normalized coordinates → easier to read values
+        sl = (shoulder_left.x, shoulder_left.y)
+        sr = (shoulder_right.x, shoulder_right.y)
+        n = (nose.x, nose.y)
+
+        
 
     
 
