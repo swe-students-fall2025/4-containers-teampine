@@ -99,10 +99,12 @@ Located in: **`web-app/`**
 
 ---
 
-## 🛠️ Getting Started
+## Getting Started
 
 ### 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/yourusername/sitstraight.git
 cd sitstraight
+
+
 

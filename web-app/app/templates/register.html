@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>SitStraight – Sign up</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- 
+      Load CSS from Flask static directory.
+      Ensures correct paths inside Docker and local Flask.
+    -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+
+    <!-- Signup JavaScript -->
+    <script defer src="{{ url_for('static', filename='js/login.js') }}"></script>
+</head>
+
+<body>
+    <div class="app-root">
+
+        <!-- ===============================
+             BRAND SECTION
+        ================================== -->
+        <div class="brand-section">
+            <div class="brand-mark">
+                <div class="brand-icon">
+                    <div class="icon-spine"></div>
+                    <div class="icon-head"></div>
+                </div>
+                <div class="brand-text">
+                    <h1 class="brand-title">SitStraight</h1>
+                    <p class="brand-subtitle">AI-powered posture habit builder</p>
+                </div>
+            </div>
+
+            <div class="tagline">
+                Intelligent, camera-based posture monitoring that helps you build healthier sitting habits.
+            </div>
+
+            <ul class="highlights">
+                <li>Detects slouching and leaning in real time</li>
+                <li>Tracks sitting time and break patterns</li>
+                <li>Visualizes posture trends in a clean dashboard</li>
+            </ul>
+        </div>
+
+        <!-- ===============================
+             SIGNUP CARD
+        ================================== -->
+        <main class="card login-card">
+            <header class="card-header">
+                <h2>Create your account</h2>
+                <p>Set up SitStraight and start building better posture habits.</p>
+            </header>
+
+            <!-- 
+              IMPORTANT:
+              This form POSTs to /register.
+              Flask backend will insert user into MongoDB.
+            -->
+            <form id="signup-form" class="form" method="POST" action="/register">
+
+                <!-- Name -->
+                <div class="field">
+                    <label for="signup-name">Name</label>
+                    <input 
+                        id="signup-name"
+                        name="name"
+                        type="text"
+                        placeholder="Alex Smith"
+                        required
+                    />
+                </div>
+
+                <!-- Email -->
+                <div class="field">
+                    <label for="signup-email">Email</label>
+                    <input 
+                        id="signup-email"
+                        name="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        required
+                    />
+                </div>
+
+                <!-- Password -->
+                <div class="field">
+                    <label for="signup-password">Create a password</label>
+
+                    <div class="password-wrapper">
+                        <input 
+                            id="signup-password"
+                            name="password"
+                            type="password"
+                            required
+                            minlength="6"
+                            placeholder="Create a password"
+                        />
+
+                        <!-- password toggle handled in login.js -->
+                        <button 
+                            type="button"
+                            class="ghost-button small"
+                            id="toggle-signup-password">
+                            Show
+                        </button>
+                    </div>
+
+                    <p class="field-hint">At least 6 characters. Use something unique.</p>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="field">
+                    <label for="signup-password-confirm">Confirm password</label>
+                    <input 
+                        id="signup-password-confirm"
+                        name="password_confirm"
+                        type="password"
+                        required
+                        minlength="6"
+                        placeholder="Repeat your password"
+                    />
+                </div>
+
+                <!-- Display error from Flask (email in use, mismatch, etc.) -->
+                {% if error %}
+                <p class="form-message form-message--error">{{ error }}</p>
+                {% endif %}
+
+                <button type="submit" class="primary-button">Create account</button>
+
+                <p class="form-message" id="signup-message" aria-live="polite"></p>
+            </form>
+
+            <footer class="card-footer">
+                <p class="footnote">
+                    SitStraight analyzes posture locally. No video is stored — only posture metrics are securely saved.
+                </p>
+            </footer>
+        </main>
+
+    </div>
+</body>
+</html>
