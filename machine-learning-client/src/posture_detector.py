@@ -28,3 +28,21 @@ class PostureDetector:
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5
         )
+
+    """
+    Calculates the angle between three points a, b, c.
+    (Not used heavily in option A but available for expansion)
+    """
+    def calculate_angle(self, a, b, c):
+
+            ang = math.degrees(
+                math.atan2(c[1] - b[1], c[0] - b[0]) -
+                math.atan2(a[1] - b[1], a[0] - b[0])
+            )
+            if ang < 0:
+                ang += 360
+            return ang
+    
+
+    
+
