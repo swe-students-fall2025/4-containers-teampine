@@ -54,14 +54,21 @@ def register():
     return render_template("register.html")
 
 
+
 # ===============================
-# DASHBOARD
+# DASHBOARD PAGE
 # ===============================
 @app.route("/dashboard")
 def dashboard():
     if "user" not in session:
         return redirect("/")
-    return render_template("dashboard.html")
+
+    from db import users  # import the collection
+
+    # Load user from MongoDB
+    user_data = users.find_one({"email": session["user"]})
+
+    return render_template("dashboard.html", user=user_data)
 
 
 # ===============================
