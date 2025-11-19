@@ -9,11 +9,11 @@ services:
     volumes:
       - mongo-data:/data/db
 
-  ml-client:
-    build: ./machine-learning-client
-    container_name: ml-client
-    depends_on:
-      - mongodb
+  # ml-client:
+  #   build: ./machine-learning-client
+  #   container_name: ml-client
+  #   depends_on:
+  #     - mongodb
 
   web-app:
     build: ./web-app
