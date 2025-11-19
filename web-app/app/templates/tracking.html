@@ -1,0 +1,35 @@
+<!-- templates/tracking.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>SitStraight – Real-Time Tracking</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tracking.css') }}">
+
+    <!-- JS logic -->
+    <script defer src="{{ url_for('static', filename='js/tracking.js') }}"></script>
+</head>
+
+<body>
+    <div class="container">
+
+        <h1 class="title">Real-Time Posture Tracking</h1>
+
+        <!-- Webcam feed -->
+        <div class="video-wrapper">
+            <video id="webcam" autoplay playsinline></video>
+        </div>
+
+        <!-- Status Text -->
+        <div id="status-box" class="status good">
+            Waiting for posture data…
+        </div>
+
+        <!-- Button to go back -->
+        <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
+
+    </div>
+</body>
+</html>
