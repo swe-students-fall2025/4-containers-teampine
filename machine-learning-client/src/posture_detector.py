@@ -73,7 +73,23 @@ class PostureDetector:
         sr = (shoulder_right.x, shoulder_right.y)
         n = (nose.x, nose.y)
 
-        
+        # 1. Shoulder alignment (left vs right height)
+        shoulder_diff = abs(sl[1] - sr[1])
+
+        # 2. Head forward distance relative to shoulders
+        mid_shoulder = ((sl[0] + sr[0]) / 2, (sl[1] + sr[1]) / 2)
+        head_forward_distance = abs(n[1] - mid_shoulder[1])
+
+        # Posture classification logic (simple, easy thresholds)
+        if shoulder_diff > 0.05:
+            # If left shoulder is lower → leaning left, else right
+            posture = "lean_left" if sl[1] > sr[1] else "lean_right"
+        elif head_forward_distance > 0.12:
+            posture = "slouch"
+        else:
+            posture = "good"
+
+    
 
     
 
