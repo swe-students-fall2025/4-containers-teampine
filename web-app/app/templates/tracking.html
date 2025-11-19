@@ -1,35 +1,124 @@
-<!-- templates/tracking.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>SitStraight – Real-Time Tracking</title>
-
-    <!-- Styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/tracking.css') }}">
-
-    <!-- JS logic -->
-    <script defer src="{{ url_for('static', filename='js/tracking.js') }}"></script>
+  <meta charset="UTF-8" />
+  <title>Posture Flow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tracking.css') }}" />
+  <script defer src="{{ url_for('static', filename='js/tracking.js') }}"></script>
 </head>
 
 <body>
-    <div class="container">
+  <div class="app">
 
-        <h1 class="title">Real-Time Posture Tracking</h1>
+    <!-- ==========================
+         STATUS BAR
+    =========================== -->
+    <div class="status-bar">
+      <div class="status-dot status-dot--live"></div>
+      <span class="status-text" id="liveStatusText">Tracking posture</span>
+      <span class="status-score" id="statusScore">86</span>
 
-        <!-- Webcam feed -->
-        <div class="video-wrapper">
-            <video id="webcam" autoplay playsinline></video>
-        </div>
-
-        <!-- Status Text -->
-        <div id="status-box" class="status good">
-            Waiting for posture data…
-        </div>
-
-        <!-- Button to go back -->
-        <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
-
+      <!-- Live mode toggle button -->
+      <button id="goLiveBtn" class="go-live-btn">Go Live</button>
     </div>
+
+
+    <!-- ==========================
+         HIDDEN CAMERA WRAPPER
+    =========================== -->
+    <div class="camera-wrapper hidden" id="cameraWrapper">
+      <video id="camera" autoplay playsinline></video>
+      <canvas id="overlay"></canvas>
+    </div>
+
+
+    <!-- ==========================
+         MAIN UI (Avatar)
+    =========================== -->
+    <div class="main">
+
+      <div class="posture-orbit">
+        <div class="orbit-ring orbit-ring--outer"></div>
+        <div class="orbit-ring orbit-ring--inner"></div>
+
+        <div class="posture-avatar">
+          <div class="avatar-head"></div>
+          <div class="avatar-body">
+            <div class="spine" id="spine">
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="avatar-torso"></div>
+          </div>
+
+          <div class="posture-halo" id="postureHalo"></div>
+        </div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <span class="info-label">Mode</span>
+          <span class="info-value" id="modeLabel">Desk</span>
+        </div>
+        <div class="info-card">
+          <span class="info-label">Streak</span>
+          <span class="info-value"><span id="streakValue">18</span> min</span>
+        </div>
+        <div class="info-card">
+          <span class="info-label">Today</span>
+          <span class="info-value"><span id="goodMinutes">72</span>% good</span>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-labels">
+          <span>Now</span>
+          <span>Earlier</span>
+        </div>
+        <div class="timeline-bar">
+          <div class="timeline-pill timeline-pill--good"></div>
+          <div class="timeline-pill timeline-pill--neutral"></div>
+          <div class="timeline-pill timeline-pill--bad"></div>
+          <div class="timeline-indicator" id="timelineIndicator"></div>
+        </div>
+      </div>
+
+      <div class="slider-section">
+        <div class="slider-header">
+          <span class="slider-title">Adjust posture</span>
+          <span class="slider-state" id="sliderStateText">Aligned</span>
+        </div>
+
+        <input type="range" min="-1" max="1" step="0.01"
+               value="0" id="postureSlider" class="posture-slider" />
+
+        <div class="slider-scale">
+          <span>Slouching</span>
+          <span>Aligned</span>
+          <span>Tense</span>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==========================
+         BOTTOM NAV
+    =========================== -->
+    <nav class="bottom-nav">
+      <button class="nav-item nav-item--active">
+        <span class="nav-icon nav-icon--live"></span>
+        <span class="nav-label">Live</span>
+      </button>
+      <button class="nav-item">
+        <span class="nav-icon nav-icon--history"></span>
+        <span class="nav-label">Day</span>
+      </button>
+      <button class="nav-item">
+        <span class="nav-icon nav-icon--profile"></span>
+        <span class="nav-label">You</span>
+      </button>
+    </nav>
+
+  </div>
 </body>
 </html>

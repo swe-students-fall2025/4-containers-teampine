@@ -71,6 +71,20 @@ def dashboard():
     return render_template("dashboard.html", user=user_data)
 
 
+
+# in app/app.py
+
+@app.route("/tracking")
+def tracking():
+    if "user" not in session:
+        return redirect("/")
+    return render_template("tracking.html")
+
+
+
+
+
+
 # ===============================
 # LOGOUT
 # ===============================
