@@ -43,6 +43,28 @@ class PostureDetector:
                 ang += 360
             return ang
     
+    """
+    Analyzes a webcam frame and returns:
+    - posture classification (string)
+    - metrics (dictionary of extracted values)
+
+    Returns:
+        ("good"|"slouch"|"lean_left"|"lean_right"|"no_person", metrics_dict)
+    """
+    def analyze(self, frame):
+        # Convert image to Mediapipe's expected RGB
+        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = self.pose.process(image_rgb)
+
+        # If no body landmarks detected → no person
+        if not results.pose_landmarks:
+            return "no_person", {"confidence": 0}
+
+        # Extract pose landmarks
+        landmarks = results.pose_landmarks.landmark
+         
 
     
+
+
 
