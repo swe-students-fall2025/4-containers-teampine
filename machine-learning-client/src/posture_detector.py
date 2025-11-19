@@ -89,6 +89,15 @@ class PostureDetector:
         else:
             posture = "good"
 
+         # Prepare metrics dictionary
+        metrics = {
+            "shoulder_diff": round(shoulder_diff, 3),
+            "head_forward_distance": round(head_forward_distance, 3),
+            "confidence": 1.0
+        }
+
+        return posture, metrics
+
     
 
     
