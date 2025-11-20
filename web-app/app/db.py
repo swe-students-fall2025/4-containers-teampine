@@ -1,10 +1,15 @@
 # db.py
 # Handles MongoDB connection and user-related helper functions
 
-from pymongo import MongoClient
+# app/db.py
+
+"""MongoDB helper functions for SitStraight."""
+
 import os
-from werkzeug.security import generate_password_hash, check_password_hash
 import re
+from pymongo import MongoClient
+from werkzeug.security import generate_password_hash, check_password_hash
+
 
 # ===============================
 # CONNECT TO MONGODB
@@ -48,6 +53,8 @@ def is_strong_password(password):
 # Create a New User
 # ===============================
 def create_user(name, email, password):
+    """Create a new user and store in MongoDB."""
+
     if not name or name.strip() == "":
         return False, "Name cannot be empty."
 
@@ -80,6 +87,7 @@ def create_user(name, email, password):
 # Validate User Login
 # ===============================
 def validate_user(email, password):
+    """Validate user credentials against MongoDB."""
     if not email or not password:
         return False, "All fields are required."
 

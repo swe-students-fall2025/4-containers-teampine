@@ -1,5 +1,9 @@
-from flask import Flask, render_template, request, redirect, session
+# app/app.py
+
+"""Main Flask application for SitStraight."""
+
 import os
+from flask import Flask, render_template, request, redirect, session
 from db import create_user, validate_user
 
 app = Flask(__name__)
@@ -11,6 +15,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "devsecret")
 # ===============================
 @app.route("/", methods=["GET", "POST"])
 def login():
+    """Render login page and authenticate user."""
     if request.method == "POST":
         email = request.form.get("username")
         password = request.form.get("password")
@@ -32,6 +37,8 @@ def login():
 # ===============================
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    """Render registration page and create user in MongoDB."""
+
     if request.method == "POST":
         name = request.form.get("name")
         email = request.form.get("email")
@@ -60,6 +67,7 @@ def register():
 # ===============================
 @app.route("/dashboard")
 def dashboard():
+    """Display dashboard for logged-in user."""
     if "user" not in session:
         return redirect("/")
 
@@ -71,7 +79,7 @@ def dashboard():
     return render_template("dashboard.html", user=user_data)
 
 
-
+'''
 # in app/app.py
 
 @app.route("/tracking")
@@ -79,7 +87,7 @@ def tracking():
     if "user" not in session:
         return redirect("/")
     return render_template("tracking.html")
-
+'''
 
 
 
@@ -90,6 +98,7 @@ def tracking():
 # ===============================
 @app.route("/logout")
 def logout():
+    """Clear session and logout."""
     session.clear()
     return redirect("/")
 
