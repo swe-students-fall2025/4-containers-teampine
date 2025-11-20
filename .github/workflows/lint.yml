@@ -11,23 +11,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check for Python files
-        id: has_python
+      # ---------------------------------------------------------
+      # RELIABLE CHECK: Does the subdirectory contain Python files?
+      # ---------------------------------------------------------
+      - name: Detect Python files using hashFiles
+        id: detect_python
         run: |
-          if ls ${{ matrix.subdir }}/*.py 1> /dev/null 2>&1; then
-            echo "has_python=true" >> $GITHUB_OUTPUT
-          else
+          FILES=$(echo "${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) }}")
+          if [ -z "$FILES" ]; then
             echo "has_python=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_python=true" >> $GITHUB_OUTPUT
           fi
 
+      # ---------------------------------------------------------
+      # PYTHON SETUP (ONLY IF PYTHON EXISTS IN THE SUBDIR)
+      # ---------------------------------------------------------
       - name: Set up Python
-        if: steps.has_python.outputs.has_python == 'true'
+        if: steps.detect_python.outputs.has_python == 'true'
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
-        if: steps.has_python.outputs.has_python == 'true'
+      - name: Install project dependencies
+        if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
           python -m pip install --upgrade pip
@@ -35,31 +42,29 @@ jobs:
             pip install -r requirements.txt
           fi
 
-      - name: Install pytest, pylint, black
-        if: steps.has_python.outputs.has_python == 'true'
+      - name: Install lint/test tools
+        if: steps.detect_python.outputs.has_python == 'true'
         run: |
-          pip install pytest pytest-cov black pylint
+          pip install pylint black pytest pytest-cov tomli
 
-      - name: Lint with pylint
-        if: steps.has_python.outputs.has_python == 'true'
+      - name: Run pylint
+        if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
-          pip install tomli
           pylint . || true
 
-      - name: Check formatting with black
-        if: steps.has_python.outputs.has_python == 'true'
+      - name: Run black --check
+        if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
-          pip install tomli
           black --diff --check .
 
-      - name: Run tests
-        if: steps.has_python.outputs.has_python == 'true'
+      - name: Run pytest
+        if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
           if [ -d tests ]; then
             pytest --cov=. --cov-fail-under=0
           else
-            echo "No tests found, skipping pytest"
+            echo "No tests folder found — skipping tests"
           fi
