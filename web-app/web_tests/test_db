@@ -1,0 +1,164 @@
+import importlib.util
+from pathlib import Path
+import types
+
+import pytest
+
+
+# ---------- helper: load web-app/app/db.py as a module ----------
+
+def load_db_module():
+    """
+    Load the db.py module from web-app/app/db.py regardless of where tests live.
+    """
+    # repo root = two levels above this file if tests/ is at repo root
+    repo_root = Path(__file__).resolve().parents[1]
+    file_path = repo_root / "web-app" / "app" / "db.py"
+
+    spec = importlib.util.spec_from_file_location("web_app_db", file_path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.fixture
+def db_module():
+    return load_db_module()
+
+
+# ---------- tests for is_valid_email ----------
+
+def test_is_valid_email_accepts_simple_address(db_module):
+    assert db_module.is_valid_email("user@example.com") is True
+
+
+def test_is_valid_email_rejects_missing_at(db_module):
+    assert db_module.is_valid_email("userexample.com") is False
+
+
+def test_is_valid_email_rejects_bad_domain(db_module):
+    assert db_module.is_valid_email("user@") is False
+
+
+# ---------- tests for is_strong_password ----------
+
+def test_is_strong_password_ok(db_module):
+    ok, msg = db_module.is_strong_password("Abcdef1")
+    assert ok is True
+    assert msg is None
+
+
+def test_is_strong_password_too_short(db_module):
+    ok, msg = db_module.is_strong_password("Ab1")
+    assert ok is False
+    assert "6 characters" in msg
+
+
+def test_is_strong_password_needs_uppercase(db_module):
+    ok, msg = db_module.is_strong_password("password1")
+    assert ok is False
+    assert "uppercase" in msg
+
+
+def test_is_strong_password_needs_lowercase(db_module):
+    ok, msg = db_module.is_strong_password("PASSWORD1")
+    assert ok is False
+    assert "lowercase" in msg
+
+
+def test_is_strong_password_needs_number(db_module):
+    ok, msg = db_module.is_strong_password("Password")
+    assert ok is False
+    assert "number" in msg
+
+
+# ---------- fake users collection for create_user / validate_user ----------
+
+class DummyUsers:
+    def __init__(self):
+        self.docs = {}
+
+    def find_one(self, query):
+        email = query.get("email")
+        return self.docs.get(email)
+
+    def insert_one(self, doc):
+        self.docs[doc["email"]] = doc
+
+
+@pytest.fixture
+def db_with_dummy_users(monkeypatch, db_module):
+    """
+    Patch db_module.users with an in-memory collection and return (db_module, users)
+    """
+    dummy = DummyUsers()
+    monkeypatch.setattr(db_module, "users", dummy)
+    return db_module, dummy
+
+
+# ---------- tests for create_user ----------
+
+def test_create_user_success(db_with_dummy_users):
+    db_module, users = db_with_dummy_users
+
+    ok, msg = db_module.create_user("Test User", "user@example.com", "Abcdef1")
+
+    assert ok is True
+    assert msg is None
+    stored = users.find_one({"email": "user@example.com"})
+    assert stored is not None
+    # password should be hashed, not raw
+    assert stored["password"] != "Abcdef1"
+
+
+def test_create_user_rejects_invalid_email(db_with_dummy_users):
+    db_module, _ = db_with_dummy_users
+
+    ok, msg = db_module.create_user("Test User", "bad-email", "Abcdef1")
+
+    assert ok is False
+    assert "email" in msg.lower()
+
+
+def test_create_user_rejects_duplicate_email(db_with_dummy_users):
+    db_module, users = db_with_dummy_users
+
+    # first user
+    db_module.create_user("User1", "dup@example.com", "Abcdef1")
+    # second with same email should fail
+    ok, msg = db_module.create_user("User2", "dup@example.com", "Abcdef1")
+
+    assert ok is False
+    assert "already" in msg.lower()
+
+
+# ---------- tests for validate_user ----------
+
+def test_validate_user_success(db_with_dummy_users):
+    db_module, users = db_with_dummy_users
+
+    # create a user via the real helper, so password is hashed correctly
+    ok, msg = db_module.create_user("User", "user@example.com", "Abcdef1")
+    assert ok
+
+    valid, result = db_module.validate_user("user@example.com", "Abcdef1")
+    assert valid is True
+    assert result["email"] == "user@example.com"
+
+
+def test_validate_user_wrong_password(db_with_dummy_users):
+    db_module, users = db_with_dummy_users
+    db_module.create_user("User", "user@example.com", "Abcdef1")
+
+    valid, msg = db_module.validate_user("user@example.com", "wrongpass")
+    assert valid is False
+    assert "password" in msg.lower()
+
+
+def test_validate_user_unknown_email(db_with_dummy_users):
+    db_module, _ = db_with_dummy_users
+
+    valid, msg = db_module.validate_user("missing@example.com", "Abcdef1")
+    assert valid is False
+    assert "not found" in msg.lower()
