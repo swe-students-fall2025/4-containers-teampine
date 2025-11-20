@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ---------------------------------------
+      # CHECK IF THE SUBDIRECTORY HAS PYTHON FILES
+      # ---------------------------------------
       - name: Check for Python files
         id: has_python
         run: |
@@ -20,38 +23,56 @@ jobs:
             echo "has_python=false" >> $GITHUB_OUTPUT
           fi
 
+      # ---------------------------------------
+      # PYTHON SETUP
+      # ---------------------------------------
       - name: Set up Python
         if: steps.has_python.outputs.has_python == 'true'
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
+      # ---------------------------------------
+      # INSTALL DEPENDENCIES
+      # ---------------------------------------
       - name: Install dependencies
         if: steps.has_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
+          python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then
-            python -m pip install --upgrade pip
             pip install -r requirements.txt
           fi
 
-      - name: Install pytest, pylint, black
+      # ---------------------------------------
+      # INSTALL LINTING + TESTING TOOLS
+      # ---------------------------------------
+      - name: Install pytest, pylint, black, tomli
         if: steps.has_python.outputs.has_python == 'true'
         run: |
-          pip install pytest pytest-cov black pylint
+          pip install pytest pytest-cov black pylint tomli
 
+      # ---------------------------------------
+      # RUN PYLINT
+      # ---------------------------------------
       - name: Lint with pylint
         if: steps.has_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
           pylint . || true
 
+      # ---------------------------------------
+      # FORMAT CHECK WITH BLACK
+      # ---------------------------------------
       - name: Check formatting with black
         if: steps.has_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
           black --diff --check .
 
+      # ---------------------------------------
+      # RUN PYTEST (IF TESTS EXIST)
+      # ---------------------------------------
       - name: Run tests
         if: steps.has_python.outputs.has_python == 'true'
         run: |
