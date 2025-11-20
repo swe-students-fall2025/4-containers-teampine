@@ -1,7 +1,5 @@
+flask
+pymongo
 mediapipe
 opencv-python
-pymongo
-pytest
-coverage
-black
-pylint
+numpy
