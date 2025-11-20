@@ -5,6 +5,7 @@
 import os
 from flask import Flask, render_template, request, redirect, session
 from db import create_user, validate_user
+from db import users  # import the collection
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "devsecret")
@@ -71,7 +72,6 @@ def dashboard():
     if "user" not in session:
         return redirect("/")
 
-    from db import users  # import the collection
 
     # Load user from MongoDB
     user_data = users.find_one({"email": session["user"]})
