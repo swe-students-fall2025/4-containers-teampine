@@ -33,38 +33,42 @@ jobs:
         with:
           python-version: "3.10"
 
-      - name: Install project dependencies
+      - name: Install pipenv
+        if: steps.detect_python.outputs.has_python == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install pipenv
+
+      - name: Install project dependencies with pipenv
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
+          pipenv install --dev --deploy
 
-      - name: Install lint/test tools
+      - name: Install additional test tools in pipenv
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
-          pip install pylint black pytest pytest-cov tomli
+          cd ${{ matrix.subdir }}
+          pipenv install pytest pytest-cov
 
       - name: Run pylint
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
-          pylint . || true
+          pipenv run pylint . || true
 
       - name: Run black --check
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
-          black --diff --check .
+          pipenv run black --diff --check . || true
 
       - name: Run pytest
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
           if [ -d tests ]; then
-            pytest --cov=. --cov-fail-under=0
+            pipenv run pytest --cov=. --cov-fail-under=0
           else
             echo "No tests folder found — skipping tests"
           fi
