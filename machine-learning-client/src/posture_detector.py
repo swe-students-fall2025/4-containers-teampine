@@ -1,106 +1,76 @@
-"""
-posture_detector.py
+"""Posture detection using MediaPipe Pose."""
 
-This file handles all posture analysis logic.
-It uses Mediapipe Pose to extract body landmarks
-and classifies posture into simple categories:
-
-- good
-- slouch
-- lean_left
-- lean_right
-"""
-
-import mediapipe as mp
 import cv2
-import math
+import mediapipe as mp
+import threading
+import time
 
-# Initialize Mediapipe pose module
-mp_pose = mp.solutions.pose
-
-
-#A simple posture detection class using Mediapipe.
 class PostureDetector:
+    """Handles webcam capture and posture analysis."""
 
     def __init__(self):
-        # Mediapipe Pose model initialization
-        self.pose = mp_pose.Pose(
-            min_detection_confidence=0.5,
-            min_tracking_confidence=0.5
-        )
+        self.mp_pose = mp.solutions.pose
+        self.pose = self.mp_pose.Pose()
+        self.running = False
+        self.latest = None
+        self.thread = None
 
-    """
-    Calculates the angle between three points a, b, c.
-    (Not used heavily in option A but available for expansion)
-    """
-    def calculate_angle(self, a, b, c):
+    def start(self):
+        """Start webcam + ML loop in a background thread."""
+        if not self.running:
+            self.running = True
+            self.thread = threading.Thread(target=self._loop, daemon=True)
+            self.thread.start()
 
-            ang = math.degrees(
-                math.atan2(c[1] - b[1], c[0] - b[0]) -
-                math.atan2(a[1] - b[1], a[0] - b[0])
-            )
-            if ang < 0:
-                ang += 360
-            return ang
-    
-    """
-    Analyzes a webcam frame and returns:
-    - posture classification (string)
-    - metrics (dictionary of extracted values)
+    def stop(self):
+        """Stop webcam loop."""
+        self.running = False
 
-    Returns:
-        ("good"|"slouch"|"lean_left"|"lean_right"|"no_person", metrics_dict)
-    """
-    def analyze(self, frame):
-        # Convert image to Mediapipe's expected RGB
-        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.pose.process(image_rgb)
+    def get_latest(self):
+        """Return latest posture metrics."""
+        return self.latest
 
-        # If no body landmarks detected → no person
-        if not results.pose_landmarks:
-            return "no_person", {"confidence": 0}
+    def _loop(self):
+        cap = cv2.VideoCapture(0)
 
-        # Extract pose landmarks
-        landmarks = results.pose_landmarks.landmark
-         
-        # Key points used for simple posture detection
-        shoulder_left = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER]
-        shoulder_right = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER]
-        nose = landmarks[mp_pose.PoseLandmark.NOSE]
+        while self.running:
+            success, frame = cap.read()
+            if not success:
+                continue
 
-        # Convert normalized coordinates → easier to read values
-        sl = (shoulder_left.x, shoulder_left.y)
-        sr = (shoulder_right.x, shoulder_right.y)
-        n = (nose.x, nose.y)
+            rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            result = self.pose.process(rgb)
 
-        # 1. Shoulder alignment (left vs right height)
-        shoulder_diff = abs(sl[1] - sr[1])
+            if result.pose_landmarks:
 
-        # 2. Head forward distance relative to shoulders
-        mid_shoulder = ((sl[0] + sr[0]) / 2, (sl[1] + sr[1]) / 2)
-        head_forward_distance = abs(n[1] - mid_shoulder[1])
+                # extract shoulder + hip landmarks
+                lm = result.pose_landmarks.landmark
+                shoulder_left = lm[11]
+                shoulder_right = lm[12]
 
-        # Posture classification logic (simple, easy thresholds)
-        if shoulder_diff > 0.05:
-            # If left shoulder is lower → leaning left, else right
-            posture = "lean_left" if sl[1] > sr[1] else "lean_right"
-        elif head_forward_distance > 0.12:
-            posture = "slouch"
-        else:
-            posture = "good"
+                # Example simple slouch metric
+                slouch = abs(shoulder_left.y - shoulder_right.y)
 
-         # Prepare metrics dictionary
-        metrics = {
-            "shoulder_diff": round(shoulder_diff, 3),
-            "head_forward_distance": round(head_forward_distance, 3),
-            "confidence": 1.0
-        }
+                # Convert to a readable score
+                score = max(0, 100 - slouch * 150)
 
-        return posture, metrics
+                state = "aligned"
+                if score < 60:
+                    state = "slouch"
+                elif score < 80:
+                    state = "neutral"
 
-    
+                self.latest = {
+                    "timestamp": time.time(),
+                    "score": round(score),
+                    "state": state,
+                    "slouch": float(slouch),
+                }
 
-    
+            time.sleep(0.05)
+
+        cap.release()
+
 
 
 
