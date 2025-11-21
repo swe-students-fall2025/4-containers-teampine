@@ -1,28 +1,38 @@
-# ml-client/src/app.py
-from flask import Flask, request, jsonify
-import mediapipe as mp
-import cv2
-import numpy as np
+"""ML service for SitStraight – provides live posture data and stores results."""
+
+from flask import Flask, jsonify
+from posture_detector import PostureDetector
+from database import save_posture_sample
 
 app = Flask(__name__)
 
-@app.route("/analyze_frame", methods=["POST"])
-def analyze_frame():
-    file = request.files.get("frame")
-    if not file:
-        return jsonify({"error": "No frame received"})
+# global detector instance
+detector = PostureDetector()
 
-    # Convert JPEG → numpy array
-    jpg = np.frombuffer(file.read(), np.uint8)
-    frame = cv2.imdecode(jpg, cv2.IMREAD_COLOR)
+@app.route("/start", methods=["POST"])
+def start_tracking():
+    """Start the posture detection loop."""
+    detector.start()
+    return jsonify({"status": "tracking started"})
 
-    # TODO: apply posture model
-    # For now, return dummy slouch detection:
-    return jsonify({
-        "slouching": False,
-        "angle": 0,
-        "confidence": 0.90
-    })
+@app.route("/stop", methods=["POST"])
+def stop_tracking():
+    """Stop posture detection."""
+    detector.stop()
+    return jsonify({"status": "tracking stopped"})
+
+@app.route("/live", methods=["GET"])
+def get_live_posture():
+    """Return the latest posture result."""
+    data = detector.get_latest()
+
+    if data is None:
+        return jsonify({"error": "no data yet"}), 404
+
+    # save sample to database
+    save_posture_sample(data)
+
+    return jsonify(data)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8001)
+    app.run(host="0.0.0.0", port=6000)
