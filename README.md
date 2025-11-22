@@ -127,8 +127,14 @@ cd sitstraight
 
 #### 2. Start All Containers
 
+##### windows
 ```bash
 docker-compose up --build
+```
+
+##### Mac os
+```bash
+docker compose up --build
 ```
 
 This single command will:
@@ -318,6 +324,9 @@ docker-compose down
 docker-compose down -v
 ```
 
+
+## Click link
+http://localhost:5000
 ---
 
 ## 📁 Project Structure
