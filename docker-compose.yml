@@ -1,15 +1,46 @@
 services:
-  web:
-    build: ./web-app
-    ports:
-      - "5000:5000"
-    volumes:
-      - ./web-app:/app
-    depends_on:
-      - mongodb
-
   mongodb:
     image: mongo:7
     container_name: mongodb
     ports:
       - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - sitstraight_network
+
+  ml-client:
+    build: ./machine-learning-client
+    container_name: ml-client
+    ports:
+      - "5002:5002"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/sitstraight
+    depends_on:
+      - mongodb
+    networks:
+      - sitstraight_network
+    restart: unless-stopped
+
+  web:
+    build: ./web-app
+    container_name: web-app
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/sitstraight
+      - FLASK_SECRET_KEY=dev_secret_change_in_production
+      - ML_CLIENT_URL=http://ml-client:5002
+    depends_on:
+      - mongodb
+      - ml-client
+    networks:
+      - sitstraight_network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+
+networks:
+  sitstraight_network:
+    driver: bridge

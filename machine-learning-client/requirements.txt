@@ -3,3 +3,7 @@ pymongo
 mediapipe
 opencv-python
 numpy
+pytest
+coverage
+black
+pylint

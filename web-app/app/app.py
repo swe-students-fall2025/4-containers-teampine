@@ -1,20 +1,15 @@
 import os
+import requests
 from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, request, redirect, session, jsonify
-from app.db import (
-    create_user,
-    validate_user,
-    users,
-    samples,            # <-- REQUIRED FIX
-    save_posture_sample
-)
-from app.posture_detector import PostureDetector
+from db import create_user, validate_user, users, samples
 
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "devsecret")
 
-detector = PostureDetector()
+# ML Client URL
+ML_CLIENT_URL = os.getenv("ML_CLIENT_URL", "http://ml-client:5002")
 
 # ============================================================
 # AUTH ROUTES
@@ -68,6 +63,8 @@ def dashboard():
     slouch_count = 0
     total_samples = 0
     duration_minutes = 0
+    hours = 0
+    mins = 0
 
     # --- fetch today's posture samples ---
     from datetime import datetime, timedelta
@@ -81,8 +78,17 @@ def dashboard():
         total_samples = len(today_samples)
         avg_score = round(sum(s["score"] for s in today_samples) / total_samples)
         slouch_count = sum(1 for s in today_samples if s["state"] == "slouch")
-        total_seconds = total_samples * 0.35
-        duration_minutes = round(total_seconds / 60)
+        
+        # Calculate actual time from first to last sample
+        if len(today_samples) > 1:
+            timestamps = [s["timestamp"] for s in today_samples]
+            first_time = min(timestamps)
+            last_time = max(timestamps)
+            duration_seconds = (last_time - first_time).total_seconds()
+            duration_minutes = round(duration_seconds / 60)
+        else:
+            # Single sample = minimal time
+            duration_minutes = 1
 
         hours = duration_minutes // 60
         mins = duration_minutes % 60
@@ -198,22 +204,31 @@ def tracking():
 
 @app.route("/api/status")
 def status():
-    return {"status": "ML service running"}, 200
+    """Check status of ML client."""
+    try:
+        response = requests.get(f"{ML_CLIENT_URL}/health", timeout=2)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException:
+        return jsonify({"status": "ML client unreachable"}), 503
 
 
 @app.route("/process", methods=["POST"])
 def process_frame():
+    """Forward frame to ML client for analysis."""
     if "frame" not in request.files:
         return jsonify({"error": "missing frame"}), 400
 
-    frame_bytes = request.files["frame"].read()
-    result = detector.process_frame(frame_bytes)
+    # Forward the frame to ML client
+    try:
+        files = {"frame": request.files["frame"]}
+        response = requests.post(f"{ML_CLIENT_URL}/process", files=files, timeout=5)
 
-    if result is None:
-        return jsonify({"error": "processing failed"}), 500
+        if response.status_code == 200:
+            return jsonify(response.json()), 200
+        return jsonify({"error": "ML processing failed"}), 500
 
-    save_posture_sample(result)
-    return jsonify(result)
+    except requests.exceptions.RequestException as error:
+        return jsonify({"error": f"ML client unavailable: {str(error)}"}), 503
 
 # ============================================================
 @app.route("/logout")
