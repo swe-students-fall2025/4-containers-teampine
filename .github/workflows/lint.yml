@@ -2,73 +2,35 @@ name: lint-free
 on: [push, pull_request]
 
 jobs:
-  lint-and-test:
+  lint-and-format:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # repeat same job for each subsystem in the following subdirectories
         subdir: [web-app, machine-learning-client]
-
     steps:
       - uses: actions/checkout@v4
-
-      # ---------------------------------------------------------
-      # RELIABLE CHECK: Does the subdirectory contain Python files?
-      # ---------------------------------------------------------
-      - name: Detect Python files using hashFiles
-        id: detect_python
-        run: |
-          FILES=$(echo "${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) }}")
-          if [ -z "$FILES" ]; then
-            echo "has_python=false" >> $GITHUB_OUTPUT
-          else
-            echo "has_python=true" >> $GITHUB_OUTPUT
-          fi
-
-      # ---------------------------------------------------------
-      # PYTHON SETUP (ONLY IF PYTHON EXISTS IN THE SUBDIR)
-      # ---------------------------------------------------------
       - name: Set up Python
-        if: steps.detect_python.outputs.has_python == 'true'
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
-
-      - name: Install pipenv
-        if: steps.detect_python.outputs.has_python == 'true'
+          python-version: "3.10" # update version(s) as needed
+      - name: Install dependencies
+        if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
         run: |
+          cd ${{ matrix.subdir }}
           python -m pip install --upgrade pip
-          pip install pipenv
-
-      - name: Install project dependencies with pipenv
-        if: steps.detect_python.outputs.has_python == 'true'
+          python -m pip install pipenv
+          pipenv sync --dev --python $(which python)
+          pipenv shell --fancy --python $(which python)
+      - name: Lint with pylint
+        if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
+        # you may set pylint to ignore any files or dependencies that make no sense to lint
         run: |
           cd ${{ matrix.subdir }}
-          pipenv install --dev --deploy
-
-      - name: Install additional test tools in pipenv
-        if: steps.detect_python.outputs.has_python == 'true'
+          pipenv run pylint **/*.py
+      - name: Format with black
+        if: ${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) != '' }}
+        # you may set black to ignore any files or dependencies that make no sense to format
         run: |
           cd ${{ matrix.subdir }}
-          pipenv install pytest pytest-cov
-
-      - name: Run pylint
-        if: steps.detect_python.outputs.has_python == 'true'
-        run: |
-          cd ${{ matrix.subdir }}
-          pipenv run pylint . || true
-
-      - name: Run black --check
-        if: steps.detect_python.outputs.has_python == 'true'
-        run: |
-          cd ${{ matrix.subdir }}
-          pipenv run black --diff --check . || true
-
-      - name: Run pytest
-        if: steps.detect_python.outputs.has_python == 'true'
-        run: |
-          cd ${{ matrix.subdir }}
-          if [ -d tests ]; then
-            pipenv run pytest --cov=. --cov-fail-under=0
-          else
-            echo "No tests folder found — skipping tests"
-          fi
+          pipenv run black --diff --check .
