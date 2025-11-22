@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>SitStraight – Dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
@@ -73,6 +74,22 @@
             color: #333;
             text-decoration: none;
         }
+
+
+        .start-btn {
+            background: #4e9cff;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: 0.2s;
+        }
+
+        .start-btn:hover {
+            background: #2f7fe6;
+        }
     </style>
 </head>
 
@@ -107,9 +124,8 @@
                 <!-- Sitting Time -->
                 <div class="metric-card">
                     <div class="metric-title">Tracking Time</div>
-                    <div class="metric-value">
-                        {{ duration_minutes }} min
-                    </div>
+                    <div class="metric-value">{{ hours }}h {{ mins }}m</div>
+
                     <div class="metric-sub">Total time monitored today</div>
                 </div>
 
@@ -131,18 +147,122 @@
         </section>
 
         <!-- Chart Placeholder -->
+        <!-- Weekly Chart -->
         <section>
             <h3>Weekly Trend</h3>
-            <div class="chart-placeholder">
-                📈 Weekly posture chart coming soon…
-            </div>
+            <canvas id="weeklyChart" height="100"></canvas>
         </section>
+
+        <!-- Monthly Chart -->
+        <section>
+            <h3>Monthly Trend</h3>
+            <canvas id="monthlyChart" height="100"></canvas>
+        </section>
+
+        <!-- Yearly Chart -->
+        <section>
+            <h3>Yearly Trend</h3>
+            <canvas id="yearlyChart" height="100"></canvas>
+        </section>
+
 
         <!-- Start Tracking -->
         <section>
-            <a href="/tracking" class="btn">Start Real-Time Tracking</a>
+            <a href="/tracking" class="start-btn">Start Real-Time Tracking</a>
         </section>
 
     </div>
 </body>
+
+    <script>
+    async function loadWeeklyChart() {
+        const res = await fetch("/api/stats/weekly");
+        const data = await res.json();
+
+        const labels = data.map(x => x.date);
+        const values = data.map(x => x.avg_score);
+
+        new Chart(document.getElementById("weeklyChart"), {
+            type: "line",
+            data: {
+                labels,
+                datasets: [{
+                    label: "Average Score",
+                    data: values,
+                    borderWidth: 2,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+
+    async function loadMonthlyChart() {
+        const res = await fetch("/api/stats/monthly");
+        const data = await res.json();
+
+        const labels = data.map(x => x.date);
+        const values = data.map(x => x.avg_score);
+
+        new Chart(document.getElementById("monthlyChart"), {
+            type: "bar",
+            data: {
+                labels,
+                datasets: [{
+                    label: "Average Score",
+                    data: values,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+
+    async function loadYearlyChart() {
+        const res = await fetch("/api/stats/yearly");
+        const data = await res.json();
+
+        const labels = data.map(x => x.month);
+        const values = data.map(x => x.avg_score);
+
+        new Chart(document.getElementById("yearlyChart"), {
+            type: "bar",
+            data: {
+                labels,
+                datasets: [{
+                    label: "Average Score",
+                    data: values,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+
+    loadWeeklyChart();
+    loadMonthlyChart();
+    loadYearlyChart();
+
+    </script>
 </html>

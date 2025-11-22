@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, request, redirect, session, jsonify
 from app.db import (
     create_user,
@@ -70,17 +71,22 @@ def dashboard():
 
     # --- fetch today's posture samples ---
     from datetime import datetime, timedelta
-    today = datetime.utcnow().date()
-    start = datetime(today.year, today.month, today.day)
+    
+    today = datetime.now(timezone.utc).date()
+    start = datetime(today.year, today.month, today.day, tzinfo=timezone.utc)
     end = start + timedelta(days=1)
-
     today_samples = list(samples.find({"timestamp": {"$gte": start, "$lt": end}}))
 
     if today_samples:
         total_samples = len(today_samples)
         avg_score = round(sum(s["score"] for s in today_samples) / total_samples)
         slouch_count = sum(1 for s in today_samples if s["state"] == "slouch")
-        duration_minutes = round(total_samples * 0.35)  # ~350ms per frame
+        total_seconds = total_samples * 0.35
+        duration_minutes = round(total_seconds / 60)
+
+        hours = duration_minutes // 60
+        mins = duration_minutes % 60
+
 
     return render_template(
         "dashboard.html",
@@ -89,7 +95,94 @@ def dashboard():
         slouch_count=slouch_count,
         total_samples=total_samples,
         duration_minutes=duration_minutes,
+        hours=hours,
+        mins=mins,
     )
+
+
+
+@app.route("/api/stats/weekly")
+def weekly_stats():
+    today = datetime.now(timezone.utc).date()
+    start = today - timedelta(days=6)
+
+    start_dt = datetime(start.year, start.month, start.day, tzinfo=timezone.utc)
+
+    cursor = samples.find({
+        "timestamp": {"$gte": start_dt}
+    })
+
+    data = list(cursor)
+
+    daily = {}
+    for s in data:
+        d = s["timestamp"].date().isoformat()
+        daily.setdefault(d, []).append(s["score"])
+
+    weekly = [
+        {"date": day, "avg_score": round(sum(scores) / len(scores))}
+        for day, scores in sorted(daily.items())
+    ]
+
+    return jsonify(weekly)
+
+
+@app.route("/api/stats/monthly")
+def monthly_stats():
+
+    today = datetime.now(timezone.utc)
+    start = today.replace(day=1)
+
+    start_dt = datetime(start.year, start.month, 1, tzinfo=timezone.utc)
+
+    cursor = samples.find({
+        "timestamp": {"$gte": start_dt}
+    })
+
+    data = list(cursor)
+
+    # group by day
+    daily = {}
+    for s in data:
+        d = s["timestamp"].date().isoformat()
+        daily.setdefault(d, []).append(s["score"])
+
+    monthly = [
+        {"date": d, "avg_score": round(sum(scores)/len(scores))}
+        for d, scores in sorted(daily.items())
+    ]
+
+    return jsonify(monthly)
+
+
+
+@app.route("/api/stats/yearly")
+def yearly_stats():
+
+    # Get samples from the last 12 months
+    today = datetime.now(timezone.utc)
+    start = today.replace(year=today.year - 1)
+
+    data = list(samples.find({
+        "timestamp": {"$gte": datetime(start.year, start.month, start.day)}
+    }))
+
+    # Group by month
+    monthly = {}
+    for s in data:
+        d = s["timestamp"].strftime("%Y-%m")   # YYYY-MM
+        monthly.setdefault(d, []).append(s["score"])
+
+    yearly = [
+        {
+            "month": month,
+            "avg_score": round(sum(scores) / len(scores))
+        }
+        for month, scores in monthly.items()
+    ]
+
+    return jsonify(yearly)
+
 
 
 

@@ -9,7 +9,7 @@ Handles:
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -135,7 +135,7 @@ def save_posture_sample(data):
     """Insert posture analysis into MongoDB."""
     try:
         doc = {
-            "timestamp": datetime.utcnow(),
+            "timestamp": datetime.now(timezone.utc),
             "score": data.get("score"),
             "state": data.get("state"),
             "slouch": data.get("slouch", data.get("slouch_raw", 0)),
