@@ -190,9 +190,14 @@ goLiveBtn.addEventListener("click", async () => {
 
         if (mlInterval) clearInterval(mlInterval);
 
+        // Stop video stream
+        if (video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+
+        // Redirect to dashboard to see updated data
         if (scoreHistory.length > 0) {
-            const avg = Math.floor(scoreHistory.reduce((a, b) => a + b) / scoreHistory.length);
-            updateScore(avg);
+            window.location.href = "/dashboard";
         }
     }
 });

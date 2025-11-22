@@ -44,13 +44,13 @@ def main():
             continue
 
         # Analyze posture in current frame
-        posture, metrics = detector.analyze(frame)
+        posture_state, metrics = detector.analyze(frame)
 
         # Print posture to console
-        print(f"[POSTURE] {posture} | {metrics}")
+        print(f"[POSTURE] {posture_state} | score={metrics['score']}")
 
         # Save into MongoDB
-        db.insert_posture(posture, metrics)
+        db.insert_posture(posture_state, metrics)
 
         # Wait before next capture
         time.sleep(CHECK_INTERVAL)

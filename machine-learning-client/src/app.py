@@ -1,15 +1,15 @@
 """ML service for SitStraight – provides live posture data and stores results."""
 
 from flask import Flask, jsonify, request
-from posture_detector import PostureDetector
-from database import save_posture_sample
-import cv2
 import numpy as np
+from posture_detector import PostureDetector
+from database import DatabaseClient
 
 app = Flask(__name__)
 
 # global detector instance
 detector = PostureDetector()
+db = DatabaseClient()
 
 
 
@@ -34,43 +34,29 @@ def process_frame():
     file = request.files["frame"]
     frame_bytes = file.read()
 
-    result = detector.process_frame(frame_bytes)
+    # Decode image
+    import cv2
+    np_arr = np.frombuffer(frame_bytes, np.uint8)
+    img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-    if result is None:
-        return jsonify({"error": "processing failed"}), 500
+    if img is None:
+        return jsonify({"error": "failed to decode frame"}), 400
+
+    # Analyze posture
+    state, metrics = detector.analyze(img)
 
     # Save to DB
-    save_posture_sample(result)
+    db.insert_posture(state, metrics)
 
-    return jsonify(result)
-
-
+    return jsonify(metrics)
 
 
-@app.route("/start", methods=["POST"])
-def start_tracking():
-    """Start the posture detection loop."""
-    detector.start()
-    return jsonify({"status": "tracking started"})
 
-@app.route("/stop", methods=["POST"])
-def stop_tracking():
-    """Stop posture detection."""
-    detector.stop()
-    return jsonify({"status": "tracking stopped"})
 
-@app.route("/live", methods=["GET"])
-def get_live_posture():
-    """Return the latest posture result."""
-    data = detector.get_latest()
-
-    if data is None:
-        return jsonify({"error": "no data yet"}), 404
-
-    # save sample to database
-    save_posture_sample(data)
-
-    return jsonify(data)
+@app.route("/health", methods=["GET"])
+def health_check():
+    """Health check endpoint."""
+    return jsonify({"status": "healthy", "service": "ml-client"})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002)

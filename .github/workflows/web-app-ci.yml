@@ -1,0 +1,50 @@
+name: Web App CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web-app/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'web-app/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          cd web-app
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run black formatter check
+        run: |
+          cd web-app
+          black --check --diff app/
+
+      - name: Run pylint
+        run: |
+          cd web-app
+          pylint app/ --disable=C0114,C0115,C0116
+
+      - name: Run tests with coverage
+        run: |
+          cd web-app
+          if [ -d tests ]; then
+            pytest tests/ --cov=app --cov-report=term-missing --cov-fail-under=80
+          else
+            echo "⚠️ No tests directory found - create tests to meet 80% coverage requirement"
+            exit 1
+          fi
+
