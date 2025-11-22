@@ -1,59 +1,88 @@
-# db.py
-# Handles MongoDB connection and user-related helper functions
-
-# app/db.py
-
-"""MongoDB helper functions for SitStraight."""
+"""
+Unified MongoDB helper for SitStraight.
+Handles:
+ - User accounts
+ - Posture sample saving
+ - Safe MongoDB connection (Docker or localhost)
+"""
 
 import os
 import re
+import sys
+from datetime import datetime
 from pymongo import MongoClient
+from pymongo.errors import ServerSelectionTimeoutError, ConnectionFailure
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
-# ===============================
+# ============================================================
+# SMART MONGO URI SELECTION (Docker OR local)
+# ============================================================
+
+DEFAULT_DOCKER_URI = "mongodb://mongodb:27017"
+DEFAULT_LOCAL_URI = "mongodb://127.0.0.1:27017"
+
+env_uri = os.getenv("MONGO_URI", DEFAULT_DOCKER_URI)
+
+def choose_uri(uri: str) -> str:
+    """Try connecting to the provided URI; fallback to localhost."""
+    try:
+        test = MongoClient(uri, serverSelectionTimeoutMS=1000)
+        test.admin.command("ping")
+        print(f"[DB] Connected → {uri}")
+        return uri
+    except Exception:
+        print(f"[DB] Failed → {uri}, switching to localhost.")
+        return DEFAULT_LOCAL_URI
+
+
+MONGO_URI = choose_uri(env_uri)
+
+
+# ============================================================
 # CONNECT TO MONGODB
-# ===============================
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-client = MongoClient(MONGO_URI)
+# ============================================================
+
+try:
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=3000)
+    client.admin.command("ping")
+    print("[DB] Connection OK")
+except (ServerSelectionTimeoutError, ConnectionFailure):
+    print("[DB] ERROR: Could not connect to:", MONGO_URI)
+    sys.exit(1)
 
 db = client["sitstraight"]
-users = db["users"]   # Collection where users are stored
+
+users = db["users"]
+samples = db["posture_samples"]
 
 
-# ===============================
-# Helper — Validate Email Format
-# ===============================
+# ============================================================
+# EMAIL + PASSWORD VALIDATION
+# ============================================================
+
 def is_valid_email(email):
     pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
     return re.match(pattern, email) is not None
 
-
-# ===============================
-# Helper — Validate Password Strength
-# (you can customize the rules if needed)
-# ===============================
 def is_strong_password(password):
     if len(password) < 6:
         return False, "Password must be at least 6 characters."
-
     if not re.search(r"[A-Z]", password):
-        return False, "Password must contain at least one uppercase letter."
-
+        return False, "Password must contain an uppercase letter."
     if not re.search(r"[a-z]", password):
-        return False, "Password must contain at least one lowercase letter."
-
+        return False, "Password must contain a lowercase letter."
     if not re.search(r"[0-9]", password):
-        return False, "Password must contain at least one number."
-
+        return False, "Password must contain a number."
     return True, None
 
 
-# ===============================
-# Create a New User
-# ===============================
+# ============================================================
+# USER MANAGEMENT
+# ============================================================
+
 def create_user(name, email, password):
-    """Create a new user and store in MongoDB."""
+    """Create a new user in MongoDB."""
 
     if not name or name.strip() == "":
         return False, "Name cannot be empty."
@@ -61,13 +90,11 @@ def create_user(name, email, password):
     if not email or not is_valid_email(email):
         return False, "Invalid email format."
 
-    email = email.strip().lower()  # Normalize email
+    email = email.strip().lower()
 
-    # Check if email exists already
     if users.find_one({"email": email}):
-        return False, "Email is already registered."
+        return False, "Email already registered."
 
-    # Validate password strength
     strong, msg = is_strong_password(password)
     if not strong:
         return False, msg
@@ -83,17 +110,14 @@ def create_user(name, email, password):
     return True, None
 
 
-# ===============================
-# Validate User Login
-# ===============================
 def validate_user(email, password):
-    """Validate user credentials against MongoDB."""
+    """Validate a user login."""
     if not email or not password:
         return False, "All fields are required."
 
     email = email.strip().lower()
-
     user = users.find_one({"email": email})
+
     if not user:
         return False, "Email not found."
 
@@ -101,3 +125,22 @@ def validate_user(email, password):
         return False, "Incorrect password."
 
     return True, user
+
+
+# ============================================================
+# POSTURE SAMPLE SAVING
+# ============================================================
+
+def save_posture_sample(data):
+    """Insert posture analysis into MongoDB."""
+    try:
+        doc = {
+            "timestamp": datetime.utcnow(),
+            "score": data.get("score"),
+            "state": data.get("state"),
+            "slouch": data.get("slouch", data.get("slouch_raw", 0)),
+        }
+        samples.insert_one(doc)
+        print("[DB] Saved posture:", doc)
+    except Exception as e:
+        print("[DB ERROR] Saving failed:", e)

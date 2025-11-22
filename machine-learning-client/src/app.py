@@ -1,13 +1,51 @@
 """ML service for SitStraight – provides live posture data and stores results."""
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from posture_detector import PostureDetector
 from database import save_posture_sample
+import cv2
+import numpy as np
 
 app = Flask(__name__)
 
 # global detector instance
 detector = PostureDetector()
+
+
+
+
+
+# ===========================================
+#   OPTION A — Browser uploads frames
+#   ML processes them (NO webcam in Python)
+# ===========================================
+
+
+@app.route("/")
+def root():
+    return {"status": "ML service running"}, 200
+
+@app.route("/process", methods=["POST"])
+def process_frame():
+    """Accept one frame from frontend, return posture analysis."""
+    if "frame" not in request.files:
+        return jsonify({"error": "missing frame"}), 400
+
+    file = request.files["frame"]
+    frame_bytes = file.read()
+
+    result = detector.process_frame(frame_bytes)
+
+    if result is None:
+        return jsonify({"error": "processing failed"}), 500
+
+    # Save to DB
+    save_posture_sample(result)
+
+    return jsonify(result)
+
+
+
 
 @app.route("/start", methods=["POST"])
 def start_tracking():
@@ -35,4 +73,5 @@ def get_live_posture():
     return jsonify(data)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=6000)
+    app.run(host="0.0.0.0", port=5002)
+

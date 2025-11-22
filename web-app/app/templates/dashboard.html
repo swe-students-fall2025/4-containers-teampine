@@ -81,7 +81,7 @@
 
         <!-- Top Bar -->
         <div class="top-bar">
-            <h2>Welcome, {{ session['user'] }} 👋</h2>
+            <h2>Welcome, {{ user }} 👋</h2>
             <a href="/logout" class="logout-btn">Logout</a>
         </div>
 
@@ -91,32 +91,40 @@
 
             <div class="metrics-grid">
 
-                <!-- Posture Score -->
+                <!-- Avg Posture Score -->
                 <div class="metric-card">
-                    <div class="metric-title">Posture Score</div>
-                    <div class="metric-value">82%</div>
-                    <div class="metric-sub">Good posture today</div>
+                    <div class="metric-title">Average Posture Score</div>
+                    <div class="metric-value">
+                        {% if avg_score is not none %}
+                            {{ avg_score }}%
+                        {% else %}
+                            --
+                        {% endif %}
+                    </div>
+                    <div class="metric-sub">Today’s posture quality</div>
                 </div>
 
                 <!-- Sitting Time -->
                 <div class="metric-card">
-                    <div class="metric-title">Sitting Time</div>
-                    <div class="metric-value">3h 42m</div>
-                    <div class="metric-sub">Total time monitored</div>
-                </div>
-
-                <!-- Break Count -->
-                <div class="metric-card">
-                    <div class="metric-title">Breaks Taken</div>
-                    <div class="metric-value">2</div>
-                    <div class="metric-sub">Healthy breaks recorded</div>
+                    <div class="metric-title">Tracking Time</div>
+                    <div class="metric-value">
+                        {{ duration_minutes }} min
+                    </div>
+                    <div class="metric-sub">Total time monitored today</div>
                 </div>
 
                 <!-- Slouch Alerts -->
                 <div class="metric-card">
                     <div class="metric-title">Slouch Alerts</div>
-                    <div class="metric-value">5</div>
+                    <div class="metric-value">{{ slouch_count }}</div>
                     <div class="metric-sub">Corrections needed</div>
+                </div>
+
+                <!-- Total Samples -->
+                <div class="metric-card">
+                    <div class="metric-title">Samples Collected</div>
+                    <div class="metric-value">{{ total_samples }}</div>
+                    <div class="metric-sub">Data points recorded today</div>
                 </div>
 
             </div>
