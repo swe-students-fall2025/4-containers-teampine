@@ -1,0 +1,577 @@
+/* =======================================================================
+   SitStraight Login Page Stylesheet
+   -----------------------------------------------------------------------
+   This file defines the visual layout for the login page.
+   It contains:
+   - CSS variables for theme colors
+   - Base resets
+   - Layout containers
+   - Brand area styles
+   - Login card styles
+   - Form field styling
+   - Buttons
+   - Responsive breakpoints
+   ======================================================================= */
+
+
+/* -----------------------------------------------------------------------
+   THEME VARIABLES
+   These CSS variables define the entire color palette and spacing system.
+   ----------------------------------------------------------------------- */
+:root {
+  --bg: #f4f1ea;
+  --bg-strong: #f0ebe1;
+  --card-bg: #ffffff;
+
+  /* Accent colors for SitStraight’s brand identity */
+  --accent: #1f9a6a;
+  --accent-soft: #e1f3eb;
+  --accent-strong: #10845a;
+
+  /* Text colors */
+  --text-main: #26221b;
+  --text-soft: #6f6555;
+
+  /* Borders & subtle shadows */
+  --border-subtle: rgba(60, 47, 32, 0.08);
+  --shadow-soft: 0 14px 30px rgba(0, 0, 0, 0.08);
+
+  /* Rounded corners */
+  --radius-card: 18px;
+  --radius-pill: 999px;
+
+  /* Animation */
+  --transition-fast: 150ms ease-out;
+}
+
+
+/* -----------------------------------------------------------------------
+   BASE RESET
+   A minimal reset to ensure consistent box model + typography.
+   ----------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Soft beige radial background behind entire app */
+body {
+  background: radial-gradient(circle at top left, #fefaf2, #f4f1ea 55%, #e7dfd0);
+}
+
+
+/* -----------------------------------------------------------------------
+   ROOT LAYOUT
+   Full-page container that holds both the brand section & the login card.
+   ----------------------------------------------------------------------- */
+.app-root {
+  height: 100vh;
+  max-height: 100vh;
+  padding: 16px 18px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+}
+
+
+/* -----------------------------------------------------------------------
+   BRAND / MARKETING SECTION
+   Shown on the left side (desktop) or top (mobile).
+   ----------------------------------------------------------------------- */
+.brand-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 4px 0;
+}
+
+/* Logo container */
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Logo icon styling */
+.brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f7fbf5, #d5f0dd);
+  border: 1px solid rgba(12, 93, 59, 0.12);
+  padding: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Spine line inside SitStraight logo */
+.icon-spine {
+  width: 4px;
+  height: 20px;
+  border-radius: 10px;
+  background: linear-gradient(to bottom, #1f9a6a, #0f6c4b);
+  position: relative;
+}
+
+/* Vertebra-like ovals */
+.icon-spine::before,
+.icon-spine::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 4px;
+  border-radius: 99px;
+  background: #4fc497;
+  left: -3px;
+}
+
+.icon-spine::before {
+  top: 4px;
+}
+
+.icon-spine::after {
+  bottom: 4px;
+}
+
+/* Head circle in logo */
+.icon-head {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f6fdf9;
+  border: 2px solid #1f9a6a;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+/* Typography for SitStraight brand text */
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-title {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+}
+
+.brand-subtitle {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+
+.tagline {
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  max-width: 380px;
+}
+
+/* Feature bullet points */
+.highlights {
+  list-style: none;
+  padding: 0;
+  margin: 2px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+
+.highlights li {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(73, 59, 42, 0.08);
+}
+
+
+/* -----------------------------------------------------------------------
+   LOGIN CARD
+   The main container for the login form.
+   ----------------------------------------------------------------------- */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.login-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Adds subtle decorative gradients behind card content */
+.login-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(31, 154, 106, 0.12), transparent 55%),
+    radial-gradient(circle at bottom left, rgba(210, 176, 117, 0.16), transparent 60%);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Ensures inner content appears above gradients */
+.login-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Card header styling */
+.card-header {
+  margin-bottom: 10px;
+}
+
+.card-header h2 {
+  margin: 0 0 2px;
+  font-size: 1.1rem;
+}
+
+.card-header p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+/* Card footer note */
+.card-footer {
+  margin-top: 10px;
+}
+
+.footnote {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--text-soft);
+}
+
+
+/* -----------------------------------------------------------------------
+   FORM STYLING
+   Contains input fields, labels, and hints.
+   ----------------------------------------------------------------------- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field label {
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+/* Input styles */
+.field input {
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  padding: 9px 11px;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.92);
+  outline: none;
+  transition: border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.field input::placeholder {
+  color: rgba(111, 101, 85, 0.6);
+}
+
+/* Focus ring / interaction */
+.field input:focus {
+  border-color: rgba(31, 154, 106, 0.6);
+  box-shadow: 
+    0 0 0 1px rgba(31, 154, 106, 0.06),
+    0 0 0 4px rgba(31, 154, 106, 0.12);
+  background: #ffffff;
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--text-soft);
+}
+
+
+/* -----------------------------------------------------------------------
+   PASSWORD FIELD
+   Includes "show/hide" button.
+   ----------------------------------------------------------------------- */
+.password-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.password-wrapper input {
+  flex: 1;
+}
+
+.password-wrapper .ghost-button.small {
+  padding-inline: 8px;
+  font-size: 0.75rem;
+}
+
+
+/* -----------------------------------------------------------------------
+   ROWS + CHECKBOXES
+   ----------------------------------------------------------------------- */
+.form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+
+.checkbox input {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+}
+
+
+/* -----------------------------------------------------------------------
+   BUTTONS
+   Styled variants: primary, secondary, ghost, link.
+   ----------------------------------------------------------------------- */
+button {
+  font-family: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+/* --- Primary button (Login) --- */
+.primary-button {
+  margin-top: 4px;
+  width: 100%;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #ffffff;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 10px 20px rgba(18, 115, 79, 0.25);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast),
+    filter var(--transition-fast), opacity var(--transition-fast);
+}
+
+.primary-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 4px 10px rgba(18, 115, 79, 0.25);
+  filter: brightness(0.97);
+}
+
+/* --- Secondary button --- */
+.secondary-button {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid rgba(54, 39, 24, 0.12);
+  background: rgba(255, 255, 255, 0.95);
+  padding: 9px 16px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #473a2b;
+  transition: background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.secondary-button:active {
+  transform: translateY(1px);
+  background: #f8f5ef;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Ghost button (toggle password) --- */
+.ghost-button {
+  border-radius: 999px;
+  border: 1px dashed rgba(73, 59, 42, 0.3);
+  background: rgba(248, 245, 238, 0.9);
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #5c4c38;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  transition: background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.ghost-button.full {
+  width: 100%;
+}
+
+.ghost-button.small {
+  padding: 6px 10px;
+}
+
+.ghost-button:active {
+  transform: translateY(1px);
+  background: #f2e9da;
+}
+
+/* --- Link button (Forgot password?) --- */
+.link-button {
+  padding: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #8b6b30;
+  text-decoration: none;
+}
+
+
+/* -----------------------------------------------------------------------
+   DIVIDER (Between login + alternate options)
+   ----------------------------------------------------------------------- */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: rgba(70, 51, 30, 0.12);
+}
+
+.divider span {
+  font-size: 0.7rem;
+  color: var(--text-soft);
+}
+
+
+/* -----------------------------------------------------------------------
+   FORM MESSAGES (Success or Error)
+   ----------------------------------------------------------------------- */
+.form-message {
+  min-height: 16px;
+  font-size: 0.75rem;
+  margin: 2px 2px 0;
+}
+
+.form-message--success {
+  color: #157347;
+}
+
+.form-message--error {
+  color: #b02a37;
+}
+
+
+/* -----------------------------------------------------------------------
+   RESPONSIVE BREAKPOINTS
+   Adjust layout for tablets & desktops.
+   ----------------------------------------------------------------------- */
+
+/* Small screens (phones) */
+@media (min-width: 480px) {
+  .app-root {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .card {
+    padding: 18px 18px 20px;
+  }
+}
+
+/* Medium and up (tablets, laptops, desktops) */
+@media (min-width: 768px) {
+  .app-root {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 32px;
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-columns: 1.2fr 1fr; /* Brand left, Login right */
+    align-items: center;
+    gap: 24px;
+  }
+
+  .brand-section {
+    padding: 0 8px 0 0;
+  }
+
+  .brand-title {
+    font-size: 1.6rem;
+  }
+
+  .brand-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .tagline {
+    font-size: 0.9rem;
+    max-width: 420px;
+  }
+
+  .highlights {
+    font-size: 0.8rem;
+  }
+
+  .card {
+    padding: 22px 22px 24px;
+  }
+
+  .card-header h2 {
+    font-size: 1.25rem;
+  }
+}

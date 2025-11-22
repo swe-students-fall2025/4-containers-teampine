@@ -1,0 +1,8 @@
+flask
+pymongo
+pytest
+pytest-flask
+coverage
+black
+pylint
+flask-cors

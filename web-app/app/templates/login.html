@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SitStraight – Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- 
+      Flask static file loading:
+      Loads CSS from static/css/login.css
+    -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+
+    <!-- JavaScript for login interactions -->
+    <script defer src="{{ url_for('static', filename='js/login.js') }}"></script>
+  </head>
+
+  <body>
+    <div class="app-root">
+
+      <!-- ===============================
+           Brand / Marketing Section
+      ================================= -->
+      <div class="brand-section">
+        <div class="brand-mark">
+          <div class="brand-icon">
+            <div class="icon-spine"></div>
+            <div class="icon-head"></div>
+          </div>
+
+          <div class="brand-text">
+            <h1 class="brand-title">SitStraight</h1>
+            <p class="brand-subtitle">AI-powered posture habit builder</p>
+          </div>
+        </div>
+
+        <div class="tagline">
+          Intelligent, camera-based posture monitoring that helps you build
+          healthier sitting habits over time.
+        </div>
+
+        <ul class="highlights">
+          <li>Detects slouching and leaning in real time</li>
+          <li>Tracks daily sitting patterns</li>
+          <li>Visualizes posture trends in a clean dashboard</li>
+        </ul>
+      </div>
+
+      <!-- ===============================
+           LOGIN CARD
+      ================================= -->
+      <main class="card login-card">
+        <header class="card-header">
+          <h2>Welcome back</h2>
+          <p>Sign in to view your posture insights and historical trends.</p>
+        </header>
+
+        <!-- 
+          IMPORTANT:
+          POSTs to "/" which is your login route in Flask.
+        -->
+        <form id="login-form" class="form" method="POST" action="/">
+
+          <!-- Email / Username Field -->
+          <div class="field">
+            <label for="email">Email or Username</label>
+            <input
+              id="email"
+              name="username"
+              type="text"
+              placeholder="you@example.com"
+              required
+            />
+            <p class="field-hint">
+              Use the account created inside MongoDB (default: admin/password)
+            </p>
+          </div>
+
+          <!-- Password Field -->
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="password-wrapper">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                required
+                minlength="6"
+              />
+
+              <!-- Toggle visibility (handled in login.js) -->
+              <button 
+                type="button" 
+                class="ghost-button small" 
+                id="toggle-password">
+                Show
+              </button>
+            </div>
+          </div>
+
+          <!-- Flash message -->
+          {% if error %}
+          <p class="form-message form-message--error">{{ error }}</p>
+          {% endif %}
+
+          <!-- Login Button -->
+          <button type="submit" class="primary-button" id="login-button">
+            Continue to dashboard
+          </button>
+
+        </form>
+
+        <footer class="card-footer">
+          <p class="footnote">
+            SitStraight analyzes posture locally using your webcam. 
+            No video is stored — only posture metrics are saved securely in MongoDB.
+          </p>
+        </footer>
+
+        <!-- ===============================
+             ALTERNATE ACTION (Signup Link)
+             FIXED: Now uses Flask url_for
+        ================================= -->
+        <div class="form-alt">
+          <span>New to SitStraight?</span>
+          <a href="{{ url_for('register') }}" class="link-button">
+            Create an account
+          </a>
+        </div>
+
+      </main>
+
+    </div>
+  </body>
+</html>
