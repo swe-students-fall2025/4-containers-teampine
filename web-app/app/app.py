@@ -2,7 +2,7 @@ import os
 import requests
 from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, request, redirect, session, jsonify
-from app.db import create_user, validate_user, users, samples
+from db import create_user, validate_user, users, samples
 
 
 app = Flask(__name__)
