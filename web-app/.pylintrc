@@ -1,12 +1,19 @@
 [MASTER]
+ignore=__pycache__
+
+[MESSAGES CONTROL]
 disable=
     C0114,  # missing-module-docstring
     C0115,  # missing-class-docstring
     C0116,  # missing-function-docstring
-    R0903,  # too-few-public-methods
+    C0411,  # wrong-import-order
+    C0415,  # import-outside-toplevel
+    W0718,  # broad-exception-caught
     W0621,  # redefined-outer-name
-    W0404,  # reimported-module
-    R0914,  # too-many-locals
-    C0301   # line-too-long
+    W0105,  # useless string statement
+    W1309,  # f-string without interpolation
+    E1101,  # OpenCV dynamic attributes (cv2 no-member)
+    E0401,  # import-error (good for multi-module projects)
 
-[MESSAGES CONTROL]
+[FORMAT]
+max-line-length=120
