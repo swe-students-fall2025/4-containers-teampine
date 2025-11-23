@@ -5,7 +5,8 @@ Handles:
  - Posture sample saving
  - Safe MongoDB connection (Docker or localhost)
 """
-'hi'
+
+"hi"
 import os
 import re
 import sys
@@ -23,6 +24,7 @@ DEFAULT_DOCKER_URI = "mongodb://mongodb:27017"
 DEFAULT_LOCAL_URI = "mongodb://127.0.0.1:27017"
 
 env_uri = os.getenv("MONGO_URI", DEFAULT_DOCKER_URI)
+
 
 def choose_uri(uri: str) -> str:
     """Try connecting to the provided URI; fallback to localhost."""
@@ -63,9 +65,11 @@ samples = db["posture_samples"]
 # EMAIL + PASSWORD VALIDATION
 # ============================================================
 
+
 def is_valid_email(email):
     pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
     return re.match(pattern, email) is not None
+
 
 def is_strong_password(password):
     if len(password) < 6:
@@ -82,6 +86,7 @@ def is_strong_password(password):
 # ============================================================
 # USER MANAGEMENT
 # ============================================================
+
 
 def create_user(name, email, password):
     """Create a new user in MongoDB."""
@@ -103,11 +108,13 @@ def create_user(name, email, password):
 
     hashed_pw = generate_password_hash(password)
 
-    users.insert_one({
-        "name": name.strip(),
-        "email": email,
-        "password": hashed_pw,
-    })
+    users.insert_one(
+        {
+            "name": name.strip(),
+            "email": email,
+            "password": hashed_pw,
+        }
+    )
 
     return True, None
 
@@ -132,6 +139,7 @@ def validate_user(email, password):
 # ============================================================
 # POSTURE SAMPLE SAVING
 # ============================================================
+
 
 def save_posture_sample(data):
     """Insert posture analysis into MongoDB."""
