@@ -3,16 +3,13 @@
 from flask import Flask, jsonify, request
 import numpy as np
 from posture_detector import PostureDetector
-from database import DatabaseClient
+from src.database import DatabaseClient
 
 app = Flask(__name__)
 
 # global detector instance
 detector = PostureDetector()
 db = DatabaseClient()
-
-
-
 
 
 # ===========================================
@@ -25,6 +22,7 @@ db = DatabaseClient()
 def root():
     return {"status": "ML service running"}, 200
 
+
 @app.route("/process", methods=["POST"])
 def process_frame():
     """Accept one frame from frontend, return posture analysis."""
@@ -36,6 +34,7 @@ def process_frame():
 
     # Decode image
     import cv2
+
     np_arr = np.frombuffer(frame_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
@@ -51,13 +50,11 @@ def process_frame():
     return jsonify(metrics)
 
 
-
-
 @app.route("/health", methods=["GET"])
 def health_check():
     """Health check endpoint."""
     return jsonify({"status": "healthy", "service": "ml-client"})
 
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5002)
-

@@ -1,9 +1,11 @@
 flask
 pymongo
+dnspython
+certifi
 mediapipe
-opencv-python
 numpy
 pytest
 coverage
 black
 pylint
+opencv-python

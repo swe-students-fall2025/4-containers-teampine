@@ -42,4 +42,3 @@ def test_api_status(mock_get, client):
 
     response = client.get("/api/status")
     assert response.status_code == 200
-

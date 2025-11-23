@@ -2,7 +2,7 @@ import os
 import requests
 from datetime import datetime, timedelta, timezone
 from flask import Flask, render_template, request, redirect, session, jsonify
-from db import create_user, validate_user, users, samples
+from app.db import create_user, validate_user, users, samples
 
 
 app = Flask(__name__)
@@ -14,6 +14,7 @@ ML_CLIENT_URL = os.getenv("ML_CLIENT_URL", "http://ml-client:5002")
 # ============================================================
 # AUTH ROUTES
 # ============================================================
+
 
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -68,7 +69,7 @@ def dashboard():
 
     # --- fetch today's posture samples ---
     from datetime import datetime, timedelta
-    
+
     today = datetime.now(timezone.utc).date()
     start = datetime(today.year, today.month, today.day, tzinfo=timezone.utc)
     end = start + timedelta(days=1)
@@ -78,7 +79,7 @@ def dashboard():
         total_samples = len(today_samples)
         avg_score = round(sum(s["score"] for s in today_samples) / total_samples)
         slouch_count = sum(1 for s in today_samples if s["state"] == "slouch")
-        
+
         # Calculate actual time from first to last sample
         if len(today_samples) > 1:
             timestamps = [s["timestamp"] for s in today_samples]
@@ -93,7 +94,6 @@ def dashboard():
         hours = duration_minutes // 60
         mins = duration_minutes % 60
 
-
     return render_template(
         "dashboard.html",
         user=user,
@@ -106,7 +106,6 @@ def dashboard():
     )
 
 
-
 @app.route("/api/stats/weekly")
 def weekly_stats():
     today = datetime.now(timezone.utc).date()
@@ -114,9 +113,7 @@ def weekly_stats():
 
     start_dt = datetime(start.year, start.month, start.day, tzinfo=timezone.utc)
 
-    cursor = samples.find({
-        "timestamp": {"$gte": start_dt}
-    })
+    cursor = samples.find({"timestamp": {"$gte": start_dt}})
 
     data = list(cursor)
 
@@ -141,9 +138,7 @@ def monthly_stats():
 
     start_dt = datetime(start.year, start.month, 1, tzinfo=timezone.utc)
 
-    cursor = samples.find({
-        "timestamp": {"$gte": start_dt}
-    })
+    cursor = samples.find({"timestamp": {"$gte": start_dt}})
 
     data = list(cursor)
 
@@ -154,12 +149,11 @@ def monthly_stats():
         daily.setdefault(d, []).append(s["score"])
 
     monthly = [
-        {"date": d, "avg_score": round(sum(scores)/len(scores))}
+        {"date": d, "avg_score": round(sum(scores) / len(scores))}
         for d, scores in sorted(daily.items())
     ]
 
     return jsonify(monthly)
-
 
 
 @app.route("/api/stats/yearly")
@@ -169,27 +163,24 @@ def yearly_stats():
     today = datetime.now(timezone.utc)
     start = today.replace(year=today.year - 1)
 
-    data = list(samples.find({
-        "timestamp": {"$gte": datetime(start.year, start.month, start.day)}
-    }))
+    data = list(
+        samples.find(
+            {"timestamp": {"$gte": datetime(start.year, start.month, start.day)}}
+        )
+    )
 
     # Group by month
     monthly = {}
     for s in data:
-        d = s["timestamp"].strftime("%Y-%m")   # YYYY-MM
+        d = s["timestamp"].strftime("%Y-%m")  # YYYY-MM
         monthly.setdefault(d, []).append(s["score"])
 
     yearly = [
-        {
-            "month": month,
-            "avg_score": round(sum(scores) / len(scores))
-        }
+        {"month": month, "avg_score": round(sum(scores) / len(scores))}
         for month, scores in monthly.items()
     ]
 
     return jsonify(yearly)
-
-
 
 
 @app.route("/tracking")
@@ -198,9 +189,11 @@ def tracking():
         return redirect("/")
     return render_template("tracking.html")
 
+
 # ============================================================
 # ML API ROUTES
 # ============================================================
+
 
 @app.route("/api/status")
 def status():
@@ -229,6 +222,7 @@ def process_frame():
 
     except requests.exceptions.RequestException as error:
         return jsonify({"error": f"ML client unavailable: {str(error)}"}), 503
+
 
 # ============================================================
 @app.route("/logout")

@@ -45,4 +45,3 @@ def test_password_strength():
     # No number
     strong, msg = is_strong_password("Password")
     assert strong is False
-

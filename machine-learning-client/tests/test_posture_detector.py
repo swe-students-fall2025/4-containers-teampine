@@ -40,4 +40,3 @@ def test_analyze_returns_correct_format():
     assert "state" in metrics
     assert "slouch_raw" in metrics
     assert "timestamp" in metrics
-

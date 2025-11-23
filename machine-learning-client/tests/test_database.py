@@ -32,4 +32,3 @@ def test_insert_posture():
 
         # Verify insert_one was called
         assert db_client.samples.insert_one.called
-

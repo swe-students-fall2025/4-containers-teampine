@@ -8,6 +8,7 @@ services:
       - mongodb_data:/data/db
     networks:
       - sitstraight_network
+    restart: unless-stopped
 
   ml-client:
     build: ./machine-learning-client
@@ -15,7 +16,7 @@ services:
     ports:
       - "5002:5002"
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/sitstraight
+      - MONGO_URI=mongodb+srv://jrc9921_db_user:8TWi5FMHWdyRWDkA@cluster0.nzniema.mongodb.net/?appName=Cluster0
     depends_on:
       - mongodb
     networks:
@@ -28,12 +29,12 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/sitstraight
+      - MONGO_URI=mongodb+srv://jrc9921_db_user:8TWi5FMHWdyRWDkA@cluster0.nzniema.mongodb.net/?appName=Cluster0
       - FLASK_SECRET_KEY=dev_secret_change_in_production
       - ML_CLIENT_URL=http://ml-client:5002
     depends_on:
-      - mongodb
       - ml-client
+      - mongodb
     networks:
       - sitstraight_network
     restart: unless-stopped

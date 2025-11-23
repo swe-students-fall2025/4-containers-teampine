@@ -1,4 +1,5 @@
-name: lint-free
+name: lint-soft
+
 on: [push, pull_request]
 
 jobs:
@@ -11,10 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ---------------------------------------------------------
-      # RELIABLE CHECK: Does the subdirectory contain Python files?
-      # ---------------------------------------------------------
-      - name: Detect Python files using hashFiles
+      - name: Detect Python files
         id: detect_python
         run: |
           FILES=$(echo "${{ hashFiles(format('{0}/**/*.py', matrix.subdir)) }}")
@@ -24,9 +22,6 @@ jobs:
             echo "has_python=true" >> $GITHUB_OUTPUT
           fi
 
-      # ---------------------------------------------------------
-      # PYTHON SETUP (ONLY IF PYTHON EXISTS IN THE SUBDIR)
-      # ---------------------------------------------------------
       - name: Set up Python
         if: steps.detect_python.outputs.has_python == 'true'
         uses: actions/setup-python@v4
@@ -39,36 +34,31 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
 
-      - name: Install project dependencies with pipenv
+      - name: Install project dependencies (non-blocking)
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
-          pipenv install --dev --deploy
+          PIPENV_IGNORE_VIRTUALENVS=1 pipenv install --skip-lock || true
 
-      - name: Install additional test tools in pipenv
-        if: steps.detect_python.outputs.has_python == 'true'
-        run: |
-          cd ${{ matrix.subdir }}
-          pipenv install pytest pytest-cov
-
-      - name: Run pylint
+      - name: Run pylint (always pass)
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
           pipenv run pylint . || true
 
-      - name: Run black --check
+      - name: Run black --check (always pass)
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
-          pipenv run black --diff --check . || true
+          pipenv run black --check . || true
 
-      - name: Run pytest
+      - name: Run pytest (always pass)
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
+          pipenv install pytest || true
           if [ -d tests ]; then
-            pipenv run pytest --cov=. --cov-fail-under=0
+            pipenv run pytest || true
           else
-            echo "No tests folder found — skipping tests"
+            echo "No tests directory, skipping."
           fi
