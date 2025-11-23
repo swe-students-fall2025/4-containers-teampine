@@ -1,4 +1,4 @@
-# 📌 SitStraight: AI-Powered Posture Monitoring System
+# 📌 SitStraight: AI-Powered Posture Monitoring System-M
 
 ![ML Client CI](https://github.com/USER/REPO/actions/workflows/ml-client-ci.yml/badge.svg)
 ![Web App CI](https://github.com/USER/REPO/actions/workflows/web-app-ci.yml/badge.svg)
@@ -59,10 +59,10 @@ SitStraight consists of **three containerized subsystems**:
 │           │                        │                        │
 │           ▼                        ▼                        │
 │  ┌─────────────────┐      ┌──────────────────┐             │
-│  │   ML Client     │◀────▶│     MongoDB      │             │
-│  │  (port 5002)    │      │  (port 27017)    │             │
+│  │   ML Client     │◀────▶│ MongoDB Atlas    │             │
+│  │  (port 5002)    │      │  (Cloud DB)      │             │
 │  └─────────────────┘      └──────────────────┘             │
-│   Posture Analysis         Data Storage                     │
+│   Posture Analysis         Shared Data Storage              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -92,15 +92,18 @@ SitStraight consists of **three containerized subsystems**:
   - Browser-based webcam capture
   - Communicates with ML client for analysis
 
-### Container 3: MongoDB Database
+### MongoDB Atlas (Cloud Database)
 
-**Purpose:** Persistent data storage for users and posture samples.
+**Purpose:** Shared cloud database for all team members.
 
-- **Technology:** MongoDB 7
-- **Port:** 27017
+- **Technology:** MongoDB Atlas (Cloud)
 - **Collections:**
   - `users` - User accounts and credentials
   - `posture_samples` - Timestamped posture analysis results
+- **Benefits:**
+  - Shared data across all team members
+  - No local MongoDB container needed
+  - Automatic backups and scaling
 
 ---
 
@@ -161,30 +164,26 @@ http://localhost:5000
 
 ### Environment Variables
 
-The system uses the following environment variables (configured in `docker-compose.yml`):
+Create a `.env` file in the project root with your MongoDB Atlas connection:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MONGO_URI` | `mongodb://mongodb:27017/sitstraight` | MongoDB connection string |
-| `FLASK_SECRET_KEY` | `dev_secret_change_in_production` | Flask session secret |
-| `ML_CLIENT_URL` | `http://ml-client:5002` | ML client service URL |
+| Variable | Description |
+|----------|-------------|
+| `MONGO_URI` | MongoDB Atlas connection string (get from Atlas dashboard) |
+| `FLASK_SECRET_KEY` | Flask session secret key |
+| `ML_CLIENT_URL` | ML client service URL (default: `http://ml-client:5002`) |
 
-### Creating a Custom Configuration
+**Example `.env` file:**
 
-If you need to customize settings:
-
-1. Copy the example environment file:
-```bash
-cp env.example .env
+```env
+MONGO_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/sitstraight
+FLASK_SECRET_KEY=dev_secret_change_in_production
+ML_CLIENT_URL=http://ml-client:5002
 ```
 
-2. Edit `.env` with your values:
-```bash
-MONGO_URI=mongodb://mongodb:27017/sitstraight
-FLASK_SECRET_KEY=your_secure_secret_key_here
-```
-
-3. Update `docker-compose.yml` to use the `.env` file.
+**Important:** 
+- Never commit `.env` to Git
+- Share the connection string securely with your team
+- Each team member needs the same `MONGO_URI` to share data
 
 ---
 
@@ -243,34 +242,26 @@ Workflows run on every push and pull request to `main`.
 
 ---
 
-## 🛠️ Running Individual Containers
+## ☁️ MongoDB Atlas Setup
 
-If you prefer to run containers separately for development:
+This project uses **MongoDB Atlas** (cloud database) so all team members can share the same data.
 
-### 1. Start MongoDB
+### Setup Steps:
 
-```bash
-docker run -d --name mongodb -p 27017:27017 mongo:7
+1. **Create account**: https://www.mongodb.com/cloud/atlas/register (free tier, no credit card)
+2. **Create cluster**: Choose M0 FREE tier
+3. **Add database user**: Database Access → Add New Database User
+4. **Allow network access**: Network Access → Add IP Address → Allow Access from Anywhere
+5. **Get connection string**: Database → Connect → Connect your application
+6. **Create `.env` file** in project root:
+
+```env
+MONGO_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/sitstraight
+FLASK_SECRET_KEY=dev_secret_change_in_production
+ML_CLIENT_URL=http://ml-client:5002
 ```
 
-### 2. Start ML Client
-
-```bash
-cd machine-learning-client
-docker build -t ml-client .
-docker run -p 5002:5002 --link mongodb -e MONGO_URI=mongodb://mongodb:27017 ml-client
-```
-
-### 3. Start Web App
-
-```bash
-cd web-app
-docker build -t web-app .
-docker run -p 5000:5000 --link mongodb --link ml-client \
-  -e MONGO_URI=mongodb://mongodb:27017 \
-  -e ML_CLIENT_URL=http://ml-client:5002 \
-  web-app
-```
+**Important**: Never commit your `.env` file to Git (it's in `.gitignore`)
 
 ---
 

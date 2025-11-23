@@ -23,12 +23,15 @@ MONGO_URI = os.getenv("MONGO_URI", DEFAULT_DOCKER_URI)
 def connect_to_mongo(uri):
     """Connect to MongoDB with retry logic."""
     try:
-        client = MongoClient(uri, serverSelectionTimeoutMS=3000)
+        print(f"[DB] Attempting connection to: {uri[:50]}...")
+        client = MongoClient(uri, serverSelectionTimeoutMS=5000)
         client.admin.command("ping")
-        print(f"[DB] Connected → {uri}")
+        print(f"[DB] ✓ Connected successfully!")
         return client
     except (ServerSelectionTimeoutError, ConnectionFailure) as error:
-        print(f"[DB] Failed to connect to {uri}: {error}")
+        print(f"[DB] ✗ Failed to connect")
+        print(f"[DB] Error type: {type(error).__name__}")
+        print(f"[DB] Error message: {str(error)}")
         # Try fallback to localhost
         if uri != DEFAULT_LOCAL_URI:
             print(f"[DB] Trying fallback → {DEFAULT_LOCAL_URI}")

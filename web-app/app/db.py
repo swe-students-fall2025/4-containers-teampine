@@ -27,12 +27,14 @@ env_uri = os.getenv("MONGO_URI", DEFAULT_DOCKER_URI)
 def choose_uri(uri: str) -> str:
     """Try connecting to the provided URI; fallback to localhost."""
     try:
-        test = MongoClient(uri, serverSelectionTimeoutMS=1000)
+        test = MongoClient(uri, serverSelectionTimeoutMS=5000)
         test.admin.command("ping")
         print(f"[DB] Connected → {uri}")
         return uri
-    except Exception:
-        print(f"[DB] Failed → {uri}, switching to localhost.")
+    except Exception as e:
+        print(f"[DB] Failed → {uri}")
+        print(f"[DB] Error: {type(e).__name__}: {str(e)}")
+        print(f"[DB] Switching to localhost.")
         return DEFAULT_LOCAL_URI
 
 
