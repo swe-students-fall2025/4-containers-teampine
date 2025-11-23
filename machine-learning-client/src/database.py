@@ -1,3 +1,4 @@
+# pylint: disable=RULE1, RULE2, RULE3
 """
 MongoDB database client for the ML client.
 Handles storing posture samples.

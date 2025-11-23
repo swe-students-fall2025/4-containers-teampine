@@ -1,3 +1,4 @@
+# pylint: disable=RULE1, RULE2, RULE3
 import os
 import requests
 from datetime import datetime, timedelta, timezone

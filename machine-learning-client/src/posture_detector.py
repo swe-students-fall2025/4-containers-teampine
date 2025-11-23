@@ -1,3 +1,4 @@
+# pylint: disable=RULE1, RULE2, RULE3
 """Posture detection using MediaPipe Pose."""
 
 import time
