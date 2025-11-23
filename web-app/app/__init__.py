@@ -1,4 +1,3 @@
-# pylint: disable=RULE1, RULE2, RULE3
 from flask import Flask
 
 

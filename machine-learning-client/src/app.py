@@ -1,4 +1,3 @@
-# pylint: disable=RULE1, RULE2, RULE3
 """ML service for SitStraight – provides live posture data and stores results."""
 
 from flask import Flask, jsonify, request
