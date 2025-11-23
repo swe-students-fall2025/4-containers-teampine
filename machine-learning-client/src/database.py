@@ -78,4 +78,3 @@ class DatabaseClient:
             print(f"[DB] Saved: {posture_state} | score={metrics.get('score', 0)}")
         except Exception as error:
             print(f"[DB ERROR] Failed to save: {error}")
-

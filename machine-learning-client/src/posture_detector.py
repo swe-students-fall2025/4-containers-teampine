@@ -16,7 +16,7 @@ class PostureDetector:
             static_image_mode=True,
             model_complexity=1,
             enable_segmentation=False,
-            min_detection_confidence=0.5
+            min_detection_confidence=0.5,
         )
 
     def analyze(self, frame):
@@ -68,7 +68,9 @@ class PostureDetector:
         )
         mid_hip = np.array([(l_hip.x + r_hip.x) / 2, (l_hip.y + r_hip.y) / 2])
         torso_angle = abs(
-            np.degrees(np.arctan2(mid_hip[1] - mid_shoulder[1], mid_hip[0] - mid_shoulder[0]))
+            np.degrees(
+                np.arctan2(mid_hip[1] - mid_shoulder[1], mid_hip[0] - mid_shoulder[0])
+            )
         )
         # Reduced divisor from 35 to 25 for more sensitivity
         torso_penalty = abs(torso_angle - 89) / 25
@@ -77,12 +79,14 @@ class PostureDetector:
         # FINAL SCORE - Normalized weights (must sum to 1.0)
         # Head: 50%, Shoulders: 30%, Torso: 20%
         slouch = 0.50 * head_penalty + 0.30 * shoulder_penalty + 0.20 * torso_penalty
-        
+
         # Clamp slouch to valid range [0, 1]
         slouch = max(0.0, min(1.0, slouch))
 
-        print(f"Head: {head_penalty:.2f}, Shoulder: {shoulder_penalty:.2f}, Torso: {torso_penalty:.2f} → Slouch: {slouch:.2f}")
-        
+        print(
+            f"Head: {head_penalty:.2f}, Shoulder: {shoulder_penalty:.2f}, Torso: {torso_penalty:.2f} → Slouch: {slouch:.2f}"
+        )
+
         score = 100 - (slouch * 100)
         score = max(0, min(100, score))
 
@@ -105,4 +109,3 @@ class PostureDetector:
         }
 
         return state, metrics
-
