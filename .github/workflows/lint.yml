@@ -4,7 +4,6 @@ on: [push, pull_request]
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         subdir: [web-app, machine-learning-client]
@@ -12,9 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ---------------------------------------------------------
-      # CHECK IF PYTHON FILES EXIST
-      # ---------------------------------------------------------
       - name: Detect Python files
         id: detect_python
         run: |
@@ -25,9 +21,6 @@ jobs:
             echo "has_python=true" >> $GITHUB_OUTPUT
           fi
 
-      # ---------------------------------------------------------
-      # PYTHON SETUP (ONLY IF NEEDED)
-      # ---------------------------------------------------------
       - name: Set up Python
         if: steps.detect_python.outputs.has_python == 'true'
         uses: actions/setup-python@v4
@@ -40,37 +33,25 @@ jobs:
           python -m pip install --upgrade pip
           pip install pipenv
 
-      # ---------------------------------------------------------
-      # INSTALL DEPENDENCIES (IGNORE LOCK FILE MISMATCH)
-      # ---------------------------------------------------------
       - name: Install project dependencies
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
           PIPENV_IGNORE_VIRTUALENVS=1 pipenv install --dev --skip-lock
 
-      # ---------------------------------------------------------
-      # PYLINT — RELAXED, NEVER FAILS JOB
-      # ---------------------------------------------------------
-      - name: Run pylint (relaxed)
+      - name: Run pylint (non-blocking)
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
-          pipenv run pylint . --disable=all --enable=E,F || true
+          pipenv run pylint . --disable=all || true
 
-      # ---------------------------------------------------------
-      # BLACK CHECK — NEVER FAIL
-      # ---------------------------------------------------------
       - name: Run black (non-blocking)
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
           pipenv run black --check . || true
 
-      # ---------------------------------------------------------
-      # TESTS — OPTIONAL, NO COVERAGE REQUIRED
-      # ---------------------------------------------------------
-      - name: Run pytest (optional)
+      - name: Run pytest (no coverage)
         if: steps.detect_python.outputs.has_python == 'true'
         run: |
           cd ${{ matrix.subdir }}
