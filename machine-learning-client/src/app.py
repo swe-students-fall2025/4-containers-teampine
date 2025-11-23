@@ -3,7 +3,7 @@
 from flask import Flask, jsonify, request
 import numpy as np
 from posture_detector import PostureDetector
-from database import DatabaseClient
+from src.database import DatabaseClient
 
 app = Flask(__name__)
 
